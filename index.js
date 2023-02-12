@@ -2,66 +2,32 @@ const express = require('express')
 const serverless = require('serverless-http')
 const app = express()
 app.use(express.json())
-const cors = require('cors')
-const mysql = require('mysql2')
+// const cors = require('cors')
+// const mysql = require('mysql2')
 
 //2. CORS 설정
 //app.use(cors())
-app.use(cors({
-    'Access-Control-Allow-Origins': '*',
-    'Access-Control-Allow-Methods': 'POST',
-    'Access-Control-Allow-Headers': 'Content-Type',
-}));
+// app.use(cors({
+//     'Access-Control-Allow-Origins': '*',
+//     'Access-Control-Allow-Methods': 'POST',
+//     'Access-Control-Allow-Headers': 'Content-Type',
+// }));
 
 app.get('/', (req, res) => {
     res.json('test')
 });
 
-/* 3. Mysql 설정 */
-//Mysql 설정 불러오기
-const dbconfig = require('./config/db_config.json')
+let num = 0;
 
-//Mysql pool 설정 불러오기
-const pool = mysql.createPool({
-    host: dbconfig.host,
-    port: dbconfig.port,
-    user: dbconfig.user,
-    password: dbconfig.password,
-    database: dbconfig.database,
-    waitForConnections: true, //사용 가능한 커넥션이 없다면 대기(true), 에러(false)
-    connectionLimit: 1,
-    queueLimit: 0
-})
+app.post('/api/v1/member/count', (req, res) => {
 
-/* 4. 비동기 처리 */
-function dbQueryAsync(sql) {
-    return new Promise(function (resolve, reject) {
-        pool.getConnection((err, conn) => {
-           conn.query(sql, (err, results, fields) => {
-                if (err) {
-                    conn.release() //DB접속 종료
-                    reject(err)
-                } else {
-                    conn.release() //DB접속 종료
-                    resolve(results[0].max_id + 1)
-                }
-            })
-        })
-    });
-}
-
-app.post('/api/v1/member/count', async (req, res) => {
-
-    const sql = 'SELECT MAX(member_id) max_id FROM member'
-
-    await dbQueryAsync(sql, res).then(function (max_id) {
-        console.log("\n node.js msg : Max 값 ", max_id, " 조회 성공 ===============")
-        return res.status(200).json({'result':'success', 'msg':max_id})
-    }).then().catch(function (err) {
-        //console.log("\m node.js error : Max 값 조회 실패 xxxxxxxxxxxxx")
+    try {
+        console.log("\n num 값 ", num++)
+        return res.status(200).json({ 'result': 'success', 'msg': num })
+    } catch {
         console.log(err)
-        return res.status(400).json({'result':'fail'})
-    })
+        return res.status(400).json({ 'result': 'fail' })
+    }
 });
 
 //1. express 설정
@@ -73,6 +39,55 @@ if(process.env.ENVIRONMENT === 'oneman'){
         console.log(`OneMan IT News Node.js Listening port : ${port}`)
     })
 }
+
+
+// /* 3. Mysql 설정 */
+// //Mysql 설정 불러오기
+// const dbconfig = require('./config/db_config.json')
+
+// //Mysql pool 설정 불러오기
+// const pool = mysql.createPool({
+//     host: dbconfig.host,
+//     port: dbconfig.port,
+//     user: dbconfig.user,
+//     password: dbconfig.password,
+//     database: dbconfig.database,
+//     waitForConnections: true, //사용 가능한 커넥션이 없다면 대기(true), 에러(false)
+//     connectionLimit: 1,
+//     queueLimit: 0
+// })
+
+// /* 4. 비동기 처리 */
+// function dbQueryAsync(sql) {
+//     return new Promise(function (resolve, reject) {
+//         pool.getConnection((err, conn) => {
+//            conn.query(sql, (err, results, fields) => {
+//                 if (err) {
+//                     conn.release() //DB접속 종료
+//                     reject(err)
+//                 } else {
+//                     conn.release() //DB접속 종료
+//                     resolve(results[0].max_id + 1)
+//                 }
+//             })
+//         })
+//     });
+// }
+
+// app.post('/api/v1/member/count', async (req, res) => {
+
+//     const sql = 'SELECT MAX(member_id) max_id FROM member'
+
+//     await dbQueryAsync(sql, res).then(function (max_id) {
+//         console.log("\n node.js msg : Max 값 ", max_id, " 조회 성공 ===============")
+//         return res.status(200).json({'result':'success', 'msg':max_id})
+//     }).then().catch(function (err) {
+//         //console.log("\m node.js error : Max 값 조회 실패 xxxxxxxxxxxxx")
+//         console.log(err)
+//         return res.status(400).json({'result':'fail'})
+//     })
+// });
+
 
 
 // // DB 커넥션 생성
